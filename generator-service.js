@@ -1,16 +1,22 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import * as fs from "fs";
-import { v4 as uuidv4 } from "uuid";
+import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
+app.use(cors());
 const port = 3001;
 
-app.get("/", (req, res) => {
-  const uuid = uuidv4();
-  const privateKey = fs.readFileSync("../key");
-  const token = jwt.sign({ uuid }, privateKey, { algorithm: "RS256" });
-  res.send(token);
+app.get("/:id", (req, res) => {
+  const { id } = req.params;
+  if (!id) res.status(400).json({ token: null, error: "id is required" });
+
+  const keyRoute = process.env.SECRET_FILE ?? "../key";
+  const privateKey = fs.readFileSync(keyRoute);
+  const token = jwt.sign({ id }, privateKey, { algorithm: "RS256" });
+  res.json({ token, error: null });
 });
 
 app.listen(port, () => {
